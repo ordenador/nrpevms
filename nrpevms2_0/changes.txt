@@ -1,0 +1,28 @@
+    09-03-2003   -  Changes:  V2.0b
+
+Platform tested:
+
+    - Alpha OpenVMS V7.3-2
+    - HP TCP/IP Services for OpenVMS Alpha Version V5.4 - ECO 5
+    - HP AXPVMS SSL V1.2
+    - HP C V7.1-015 on OpenVMS Alpha V7.3-2
+
+Changes:
+    - nrpe.cfg, howto.txt, changes.txt included
+   
+    - nrpe.com corrected
+
+    - using arguments added. To unable it, you should: 
+       add #define ENABLE_COMMAND_ARGUMENTS in config.h and compile
+       add dont_blame_nrpe=1 in nrpe.cfg (0 to disable) 
+
+    - VMS completion codes are managed. Add in sys$login:login.com the symbols
+        $ NRPE_OK == 1
+        $ NRPE_WARN == 2
+        $ NRPE_ERR == 3
+       This would be seen on the nagios side as 0/1/2, which are ok/warn/err on
+Unix environment.
+        Example: check CHECK_DISK.COM in the [.scripts] directory
+
+    - no changes on check_nrpe
+

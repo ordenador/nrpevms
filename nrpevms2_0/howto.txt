@@ -1,0 +1,62 @@
+    09-03-2003   -  Zakaria Yassine       
+                    zakaria@sympatico.ca
+
+This is a HOWTO for the NRPED implementaion on VMS. This was based on the nrpe
+source code (from Ethan Galstad). The original code has been changed in order
+to run on VMS machines. The main differences are:
+    - fork() on VMS does not provide the same functionality as on Unix
+    - some string functions are not available. These had been rewriten
+    - connection process changed to work as an auxiliary server (this is the
+      implementation of inetd on VMS). This provides multi-session capability
+
+This code has been tested on:
+    - Alpha OpenVMS V7.3
+      Alpha OpenVMS V7.1
+      Alpha OpenVMS V7.1-1H2
+      VAX OpenVMS V7.1
+    - DIGITAL TCP/IP Services for OpenVMS VAX Version V4.2
+      Digital TCP/IP Services for OpenVMS VAX Version V4.2 - ECO 5
+      DIGITAL TCP/IP Services for OpenVMS Alpha Version V4.2
+      Compaq TCP/IP Services for OpenVMS Alpha Version V5.3 - ECO 1
+    - DEC C V5.7-004 on OpenVMS VAX V7.1
+      Compaq C V6.5-001 on OpenVMS Alpha V7.3
+
+(if you succeed on other versions, let me know)
+
+These are steps to make it working. Not all mandatory. But this is, I hope, a
+clean way to do it.
+
+- Start by compiling the sources:
+
+    $ cc/define=(_VMS_WAIT)/pref=all nrpe_aux,utils,custom,check_nrpe
+    $ link nrpe_aux,utils,custom, a/opt
+    $ link check_nrpe,utils, a/opt
+
+- Create a user account 
+    for example: user nrpe, with sys$login = DKD100:[NRPE]
+
+- Define system wide logical names:
+
+  "NRPE$" = "DKD100:[NRPE]"  ! put here nrpe_aux.exe, check_nrpe.exe, nrpe.com & nrpe.cfg
+  "NRPE$LOG" = "DKD100:[NRPE.LOG]"    ! for logs
+  "NRPE$SCRIPTS" = "DKD100:[NRPE.SCRIPTS]" ! for plug-ins 
+
+- Define in sys$login:login.com the symboles
+
+	$nrpe_aux == "$nrpe$:nrpe_aux.exe"
+	$check_nrpe == "$nrpe$:check_nrpe.exe"
+        $ NRPE_ERR == 3
+        $ NRPE_OK == 1
+        $ NRPE_WARN == 2
+
+- Add NRPE daemon as an auxiliary service in UCX or TCP/IP services. 
+
+        $ ucx
+	ucx> set service NRPED /port= 5666 /protocol=tcp -
+		  /user=nrpe /process_name=nrped /file=nrpe$:nrpe.com /limit=50
+	ucx> enable service nrped
+
+- Example de check_nrpe execution:
+  
+	$ check_nrpe "-H" 10.2.7.250 "-p" 5666 "-c" check_test
+
